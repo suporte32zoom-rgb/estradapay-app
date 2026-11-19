@@ -5,7 +5,7 @@
  * estratégia Network-First para navegação e dados dinâmicos, e Stale-While-Revalidate com revalidação de assets.
  */
 
-const CACHE_NAME = 'estradapay-v3.1.0-freeflow-guia';
+const CACHE_NAME = 'estradapay-v3.2.0-qr-scanner';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

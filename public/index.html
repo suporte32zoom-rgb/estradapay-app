@@ -49,6 +49,8 @@
 
   <!-- QRCode.js para renderização rápida do PIX -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsQR para leitura universal de QR Code em câmera e imagens no navegador mobile -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
   <style>
     body {
@@ -173,6 +175,21 @@
       opacity: 1;
       pointer-events: auto;
     }
+
+    /* Linha laser animada do Leitor de QR Code */
+    @keyframes qrScanLine {
+      0%, 100% {
+        top: 12%;
+        opacity: 0.9;
+      }
+      50% {
+        top: 84%;
+        opacity: 1;
+      }
+    }
+    .qr-scan-line {
+      animation: qrScanLine 2.2s ease-in-out infinite;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans">
@@ -288,15 +305,25 @@
                 autocapitalize="characters"
                 spellcheck="false"
                 required
-                class="w-full pl-10 pr-9 py-2.5 bg-white text-slate-900 placeholder-slate-400 rounded-lg font-mono text-base font-black tracking-widest uppercase shadow-sm border-2 border-transparent focus:border-amber-400 focus:outline-none transition"
+                class="w-full pl-10 pr-20 py-2.5 bg-white text-slate-900 placeholder-slate-400 rounded-lg font-mono text-base font-black tracking-widest uppercase shadow-sm border-2 border-transparent focus:border-amber-400 focus:outline-none transition"
               />
               <button 
                 type="button" 
                 id="btnClearHeaderInput" 
-                class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-sm"
+                class="hidden absolute inset-y-0 right-10 pr-2 flex items-center text-slate-400 hover:text-slate-600 text-sm cursor-pointer"
                 title="Limpar campo"
               >
                 <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+              <button 
+                type="button" 
+                id="btnAbrirQrScannerHeader"
+                onclick="abrirQrScanner()"
+                class="absolute inset-y-1.5 right-1.5 px-2.5 flex items-center justify-center rounded-md bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-[#0c326f] border border-blue-200 transition cursor-pointer"
+                aria-label="Escanear QR Code de fatura física"
+                title="Escanear QR Code da fatura recebida pelos Correios"
+              >
+                <i class="fa-solid fa-qrcode text-base"></i>
               </button>
             </div>
 
@@ -310,6 +337,25 @@
               <span>CONSULTAR MINHA PLACA</span>
             </button>
           </form>
+
+          <!-- Atalho Mobile de Alta Visibilidade para Escanear Fatura Física (Correios) -->
+          <button
+            type="button"
+            id="btnMobileScanBanner"
+            onclick="abrirQrScanner()"
+            class="mt-2.5 w-full md:hidden flex items-center justify-between gap-3 bg-emerald-500/20 hover:bg-emerald-500/30 active:bg-emerald-500/40 border border-emerald-400/50 text-white px-4 py-2.5 rounded-xl transition shadow-sm cursor-pointer"
+          >
+            <span class="flex items-center gap-2.5 text-left">
+              <span class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center flex-shrink-0 shadow">
+                <i class="fa-solid fa-qrcode text-base"></i>
+              </span>
+              <span>
+                <span class="block text-xs font-extrabold text-emerald-300 leading-tight">Recebeu fatura pelos Correios?</span>
+                <span class="block text-[11px] text-blue-100">Escanear QR Code para preencher o pagamento</span>
+              </span>
+            </span>
+            <i class="fa-solid fa-camera text-emerald-300 text-base flex-shrink-0"></i>
+          </button>
         </div>
 
       </div>
@@ -398,6 +444,13 @@
           <i class="fa-solid fa-house w-5 text-center text-amber-400 text-base"></i>
           <span>Home</span>
         </a>
+        <button type="button" onclick="fecharDrawer(); abrirQrScanner();" class="w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 hover:bg-emerald-500/25 transition">
+          <span class="flex items-center gap-3">
+            <i class="fa-solid fa-qrcode w-5 text-center text-emerald-400 text-base"></i>
+            <span class="text-emerald-200 font-bold">Escanear Fatura (QR Code)</span>
+          </span>
+          <span class="text-[10px] bg-emerald-500 text-slate-950 font-black px-1.5 py-0.5 rounded">CÂMERA</span>
+        </button>
         <button type="button" onclick="fecharDrawer(); abrirModal('modalOQueE');" class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition">
           <i class="fa-solid fa-circle-question w-5 text-center text-sky-400 text-base"></i>
           <span>O que é o Free Flow?</span>
@@ -477,6 +530,14 @@
               <span>Consultar Placa</span>
             </span>
             <span class="text-[10px] text-blue-300">Busca Rápida</span>
+          </button>
+
+          <button type="button" onclick="fecharDrawer(); abrirQrScanner();" class="w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 transition">
+            <span class="flex items-center gap-3">
+              <i class="fa-solid fa-qrcode w-5 text-center text-emerald-400"></i>
+              <span>Escanear Fatura Física</span>
+            </span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">QR Code</span>
           </button>
 
           <button type="button" onclick="fecharDrawer(); abrirModal('modalGaragem');" class="w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 transition">
@@ -1291,6 +1352,31 @@
 
       <div class="p-5 sm:p-7 space-y-6 max-h-[80vh] overflow-y-auto">
         
+        <!-- Banner Fatura Escaneada via QR Code (Exibido quando preenchido pelo Scanner) -->
+        <div id="bannerFaturaEscaneada" class="hidden bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 text-base shadow-sm">
+              <i class="fa-solid fa-qrcode"></i>
+            </div>
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded">
+                  Fatura Física Digitalizada
+                </span>
+                <span id="faturaEscaneadaCodigo" class="text-[11px] font-mono font-bold text-emerald-900"></span>
+              </div>
+              <p id="faturaEscaneadaResumo" class="text-xs text-emerald-900 font-medium leading-snug"></p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="fecharModal('modalConsultaResultado'); abrirQrScanner();"
+            class="text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 flex-shrink-0 self-start sm:self-center cursor-pointer"
+          >
+            <i class="fa-solid fa-camera"></i> Novo Scan
+          </button>
+        </div>
+
         <!-- Veículo Identificado -->
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-4">
@@ -2467,6 +2553,172 @@
     </div>
   </div>
 
+  <!-- MODAL: LEITOR DE QR CODE PARA FATURAS FÍSICAS (MOBILE WEB & DESKTOP) -->
+  <div id="modalQrScanner" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md p-3 sm:p-5 overflow-y-auto flex items-center justify-center">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 my-4 animate-fadeIn">
+      
+      <!-- Cabeçalho Scanner -->
+      <div class="bg-[#0c326f] text-white p-4 sm:p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-lg">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div>
+            <span class="text-[10px] text-emerald-300 uppercase tracking-wider font-bold block">Leitor de Fatura Física</span>
+            <h3 class="font-black text-base text-white">Escanear QR Code da Cobrança</h3>
+          </div>
+        </div>
+        <button type="button" onclick="fecharQrScanner()" class="text-white hover:text-amber-300 text-xl p-1.5 cursor-pointer" aria-label="Fechar scanner">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Aponte a câmera do celular para o <strong>QR Code</strong> impresso na carta de cobrança ou boleto Free Flow recebido pelos Correios para preencher o checkout automaticamente.
+        </p>
+
+        <!-- Viewfinder da Câmera ao Vivo -->
+        <div class="relative w-full aspect-[4/3] sm:aspect-video bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-inner flex items-center justify-center">
+          <video id="qrScannerVideo" class="w-full h-full object-cover hidden" playsinline autoplay muted></video>
+          <canvas id="qrScannerCanvas" class="hidden"></canvas>
+
+          <!-- Overlay da Mira / Retículo -->
+          <div id="qrViewfinderOverlay" class="hidden absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div class="relative w-52 h-52 sm:w-56 sm:h-56">
+              <!-- Cantos do Retículo -->
+              <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-lg"></div>
+              <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-lg"></div>
+              <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-lg"></div>
+              <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br-lg"></div>
+              <!-- Linha de Leitura Animada -->
+              <div class="qr-scan-line absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_#34d399]"></div>
+            </div>
+          </div>
+
+          <!-- Estado Inicial / Carregando Câmera -->
+          <div id="qrScannerLoadingState" class="text-center p-6 space-y-2.5 text-slate-300">
+            <i class="fa-solid fa-camera text-3xl text-emerald-400 animate-pulse"></i>
+            <p class="text-xs font-semibold" id="qrScannerStatusText">Iniciando câmera traseira...</p>
+          </div>
+
+          <!-- Estado de Erro / Sem Permissão de Câmera -->
+          <div id="qrScannerErrorBox" class="hidden text-center p-5 space-y-3 text-slate-200 max-w-xs">
+            <div class="w-12 h-12 mx-auto rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 text-xl">
+              <i class="fa-solid fa-video-slash"></i>
+            </div>
+            <div class="space-y-1">
+              <p class="text-xs font-bold text-white" id="qrScannerErrorTitle">Câmera indisponível neste ambiente</p>
+              <p class="text-[11px] text-slate-300 leading-relaxed" id="qrScannerErrorDesc">
+                Permita o acesso à câmera no navegador ou utilize a opção abaixo para enviar uma foto da fatura.
+              </p>
+            </div>
+            <button
+              type="button"
+              onclick="iniciarCameraQr()"
+              class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3.5 py-2 rounded-lg border border-white/20 transition cursor-pointer"
+            >
+              <i class="fa-solid fa-rotate-right mr-1"></i> Tentar Câmera Novamente
+            </button>
+          </div>
+
+          <!-- Controles Superiores Flutuantes sobre a Câmera -->
+          <div id="qrCameraControls" class="hidden absolute top-3 left-3 right-3 flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 bg-slate-900/75 backdrop-blur-sm text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-400/30">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              Buscando QR Code...
+            </span>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                id="btnToggleTorch"
+                onclick="alternarLanternaQr()"
+                class="hidden w-9 h-9 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center text-sm transition cursor-pointer"
+                title="Ligar/Desligar Lanterna"
+              >
+                <i class="fa-solid fa-bolt"></i>
+              </button>
+              <button
+                type="button"
+                id="btnSwitchCamera"
+                onclick="alternarCameraQr()"
+                class="w-9 h-9 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center text-sm transition cursor-pointer"
+                title="Trocar Câmera (Frontal/Traseira)"
+              >
+                <i class="fa-solid fa-camera-rotate"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opção Alternativa: Fotografar ou Enviar Imagem da Fatura -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <label class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-[#0c326f] border border-blue-200 font-bold text-xs py-3 px-4 rounded-xl transition cursor-pointer">
+            <i class="fa-solid fa-camera text-base"></i>
+            <span>Fotografar / Enviar Foto</span>
+            <input type="file" id="inputQrImageUpload" accept="image/*" capture="environment" class="hidden">
+          </label>
+
+          <button
+            type="button"
+            onclick="document.getElementById('boxManualQrFallback').classList.toggle('hidden')"
+            class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs py-3 px-4 rounded-xl transition cursor-pointer"
+          >
+            <i class="fa-solid fa-keyboard text-base"></i>
+            <span>Digitar / Colar Código</span>
+          </button>
+        </div>
+
+        <!-- Entrada Manual de Código da Fatura / Teste Rápido -->
+        <div id="boxManualQrFallback" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+          <form id="formManualQrCode" class="space-y-2">
+            <label class="block text-[11px] font-bold text-slate-700 uppercase">Conteúdo do QR Code ou URL da Fatura:</label>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                id="inputManualQrPayload"
+                placeholder="Cole o link, PIX Copia e Cola ou código da carta..."
+                class="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:border-[#0c326f] focus:outline-none"
+              />
+              <button type="submit" class="bg-[#0c326f] hover:bg-blue-900 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition cursor-pointer flex-shrink-0">
+                Processar
+              </button>
+            </div>
+          </form>
+
+          <div class="pt-1 border-t border-slate-200 space-y-1.5">
+            <span class="text-[10px] font-bold text-slate-500 uppercase block">Simular Fatura Física (Teste Rápido):</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onclick="simularScanFatura('https://freeflow.ccrriosp.com.br/fatura?placa=BRA2E19&valor=12.30&rodovia=BR-116+Via+Dutra&portico=Km+204+Aruja&concessionaria=CCR+RioSP&fatura=FF-2026-99412')"
+                class="text-[10px] font-bold bg-white hover:bg-blue-50 text-[#0c326f] border border-slate-300 px-2.5 py-1 rounded-lg transition cursor-pointer"
+              >
+                <i class="fa-solid fa-file-invoice mr-1 text-amber-500"></i> Carta CCR RioSP (R$ 12,30)
+              </button>
+              <button
+                type="button"
+                onclick="simularScanFatura('https://pedagio.csg.com.br/notificacao?placa=ABC1D23&valor=9.80&rodovia=ERS-122&portico=Km+108+Antonio+Prado&concessionaria=CSG+Caminhos+da+Serra&fatura=CSG-884012')"
+                class="text-[10px] font-bold bg-white hover:bg-blue-50 text-[#0c326f] border border-slate-300 px-2.5 py-1 rounded-lg transition cursor-pointer"
+              >
+                <i class="fa-solid fa-file-invoice mr-1 text-emerald-500"></i> Notificação CSG (R$ 9,80)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-3.5 border-t border-slate-200 flex items-center justify-between text-xs">
+        <span class="text-[11px] text-slate-500 flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-600"></i> Leitura local segura no dispositivo
+        </span>
+        <button type="button" onclick="fecharQrScanner()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- NOTIFICAÇÃO TOAST FLUTUANTE -->
   <div id="toastMessage" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm border border-slate-700">
     <i class="fa-solid fa-circle-check text-emerald-400 text-lg" id="toastIcon"></i>
@@ -2573,6 +2825,16 @@
         taxaEstradaPay: 1.00,
         metodoPagamento: 'PIX',
         protocoloAtual: '',
+        faturaEscaneada: null,
+        qrScanner: {
+          stream: null,
+          animId: null,
+          facingMode: 'environment',
+          torchOn: false,
+          detector: null,
+          active: false,
+          lastScanTs: 0,
+        },
         garagem: JSON.parse(localStorage.getItem('estradapay_garagem') || '[]'),
         historico: JSON.parse(localStorage.getItem('estradapay_historico') || '[]'),
         alertas: JSON.parse(localStorage.getItem('estradapay_alertas') || '{}'),
@@ -2615,6 +2877,9 @@
         modalTrechoConteudo: document.getElementById('modalTrechoConteudo'),
 
         modalConsultaResultado: document.getElementById('modalConsultaResultado'),
+        bannerFaturaEscaneada: document.getElementById('bannerFaturaEscaneada'),
+        faturaEscaneadaCodigo: document.getElementById('faturaEscaneadaCodigo'),
+        faturaEscaneadaResumo: document.getElementById('faturaEscaneadaResumo'),
         resPlateModal: document.getElementById('resPlateModal'),
         resModeloModal: document.getElementById('resModeloModal'),
         resAnoModal: document.getElementById('resAnoModal'),
@@ -2659,6 +2924,23 @@
         recValorTotalStr: document.getElementById('recValorTotalStr'),
         recHashStr: document.getElementById('recHashStr'),
 
+        modalQrScanner: document.getElementById('modalQrScanner'),
+        qrScannerVideo: document.getElementById('qrScannerVideo'),
+        qrScannerCanvas: document.getElementById('qrScannerCanvas'),
+        qrViewfinderOverlay: document.getElementById('qrViewfinderOverlay'),
+        qrScannerLoadingState: document.getElementById('qrScannerLoadingState'),
+        qrScannerStatusText: document.getElementById('qrScannerStatusText'),
+        qrScannerErrorBox: document.getElementById('qrScannerErrorBox'),
+        qrScannerErrorTitle: document.getElementById('qrScannerErrorTitle'),
+        qrScannerErrorDesc: document.getElementById('qrScannerErrorDesc'),
+        qrCameraControls: document.getElementById('qrCameraControls'),
+        btnToggleTorch: document.getElementById('btnToggleTorch'),
+        btnSwitchCamera: document.getElementById('btnSwitchCamera'),
+        inputQrImageUpload: document.getElementById('inputQrImageUpload'),
+        boxManualQrFallback: document.getElementById('boxManualQrFallback'),
+        formManualQrCode: document.getElementById('formManualQrCode'),
+        inputManualQrPayload: document.getElementById('inputManualQrPayload'),
+
         formReembolso: document.getElementById('formReembolso'),
         toastMessage: document.getElementById('toastMessage'),
         toastIcon: document.getElementById('toastIcon'),
@@ -2673,6 +2955,7 @@
         setupReembolsoForm();
         setupCheckoutModalTabs();
         setupCreditCardInteractions();
+        setupQrScannerHandlers();
         atualizarGaragemUI();
         atualizarHistoricoUI();
       });
@@ -2782,7 +3065,10 @@
       }
 
       window.salvarVeiculoAtualGaragem = function() {
-        if (!state.placa) return;
+        if (!state.placa || !validarPlacaRegex(state.placa)) {
+          showToast('Placa não identificada nesta fatura para salvar na garagem.', 'info');
+          return;
+        }
         const jaExiste = state.garagem.some(v => v.placa === state.placa);
         if (jaExiste) {
           showToast(`Placa ${state.placa} já está salva na sua garagem!`, 'info');
@@ -2977,6 +3263,8 @@
       // Execução da Consulta de Placa
       async function executarConsultaPlaca(placa) {
         state.placa = placa;
+        state.faturaEscaneada = null;
+        if (dom.bannerFaturaEscaneada) dom.bannerFaturaEscaneada.classList.add('hidden');
         dom.btnHeaderConsultar.disabled = true;
         dom.btnHeaderConsultar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Consultando Base...</span>';
 
@@ -3101,6 +3389,26 @@
         dom.resModeloModal.textContent = state.veiculo.modelo;
         dom.resAnoModal.textContent = state.veiculo.ano;
         dom.resLocalModal.textContent = state.veiculo.local;
+
+        if (dom.bannerFaturaEscaneada) {
+          if (state.faturaEscaneada) {
+            dom.bannerFaturaEscaneada.classList.remove('hidden');
+            if (dom.faturaEscaneadaCodigo) {
+              dom.faturaEscaneadaCodigo.textContent = state.faturaEscaneada.codigoFatura
+                ? `Cód. ${state.faturaEscaneada.codigoFatura}`
+                : 'Leitura via QR Code';
+            }
+            if (dom.faturaEscaneadaResumo) {
+              dom.faturaEscaneadaResumo.textContent = state.faturaEscaneada.resumo || 'Dados da fatura física importados para pagamento imediato.';
+            }
+          } else {
+            dom.bannerFaturaEscaneada.classList.add('hidden');
+          }
+        }
+
+        if (dom.modalCheckSelectAll) {
+          dom.modalCheckSelectAll.checked = state.debitos.length > 0 && state.debitosSelecionados.size === state.debitos.length;
+        }
 
         renderizarTabelaModal();
         abrirModal('modalConsultaResultado');
@@ -3425,6 +3733,9 @@
       };
 
       window.fecharModal = function(id) {
+        if (id === 'modalQrScanner') {
+          pararCameraQr();
+        }
         const el = document.getElementById(id);
         if (el) {
           el.classList.add('hidden');
@@ -3462,6 +3773,552 @@
           }
         });
       });
+
+      // ========================================================
+      // LEITOR DE QR CODE PARA FATURAS FÍSICAS (MOBILE WEB)
+      // ========================================================
+      function setupQrScannerHandlers() {
+        if (dom.inputQrImageUpload) {
+          dom.inputQrImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            lerQrDeImagem(file);
+            e.target.value = '';
+          });
+        }
+
+        if (dom.formManualQrCode) {
+          dom.formManualQrCode.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const raw = (dom.inputManualQrPayload ? dom.inputManualQrPayload.value : '').trim();
+            if (!raw) {
+              showToast('Cole a URL, o código PIX ou o código da fatura.', 'error');
+              return;
+            }
+            processarFaturaEscaneada(raw);
+          });
+        }
+      }
+
+      window.abrirQrScanner = function() {
+        if (dom.boxManualQrFallback) dom.boxManualQrFallback.classList.add('hidden');
+        if (dom.inputManualQrPayload) dom.inputManualQrPayload.value = '';
+        abrirModal('modalQrScanner');
+        iniciarCameraQr();
+      };
+
+      window.fecharQrScanner = function() {
+        pararCameraQr();
+        fecharModal('modalQrScanner');
+      };
+
+      window.simularScanFatura = function(payload) {
+        processarFaturaEscaneada(payload);
+      };
+
+      function mostrarErroScannerQr(titulo, descricao) {
+        if (dom.qrScannerLoadingState) dom.qrScannerLoadingState.classList.add('hidden');
+        if (dom.qrScannerVideo) dom.qrScannerVideo.classList.add('hidden');
+        if (dom.qrViewfinderOverlay) dom.qrViewfinderOverlay.classList.add('hidden');
+        if (dom.qrCameraControls) dom.qrCameraControls.classList.add('hidden');
+        if (dom.qrScannerErrorBox) dom.qrScannerErrorBox.classList.remove('hidden');
+        if (dom.qrScannerErrorTitle) dom.qrScannerErrorTitle.textContent = titulo;
+        if (dom.qrScannerErrorDesc) dom.qrScannerErrorDesc.textContent = descricao;
+      }
+
+      function pararCameraQr() {
+        state.qrScanner.active = false;
+        state.qrScanner.torchOn = false;
+        if (state.qrScanner.animId) {
+          cancelAnimationFrame(state.qrScanner.animId);
+          state.qrScanner.animId = null;
+        }
+        if (state.qrScanner.stream) {
+          state.qrScanner.stream.getTracks().forEach((track) => {
+            try { track.stop(); } catch (e) {}
+          });
+          state.qrScanner.stream = null;
+        }
+        if (dom.qrScannerVideo) {
+          dom.qrScannerVideo.pause();
+          dom.qrScannerVideo.srcObject = null;
+        }
+        if (dom.btnToggleTorch) {
+          dom.btnToggleTorch.classList.add('hidden');
+          dom.btnToggleTorch.classList.remove('bg-amber-400', 'text-slate-950');
+          dom.btnToggleTorch.classList.add('bg-slate-900/75', 'text-white');
+        }
+      }
+
+      window.iniciarCameraQr = async function() {
+        pararCameraQr();
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          mostrarErroScannerQr(
+            'Câmera ao vivo indisponível neste navegador',
+            'Use o botão "Fotografar / Enviar Foto" para tirar uma foto da carta ou cole o código manualmente.'
+          );
+          return;
+        }
+
+        if (dom.qrScannerErrorBox) dom.qrScannerErrorBox.classList.add('hidden');
+        if (dom.qrScannerVideo) dom.qrScannerVideo.classList.add('hidden');
+        if (dom.qrViewfinderOverlay) dom.qrViewfinderOverlay.classList.add('hidden');
+        if (dom.qrCameraControls) dom.qrCameraControls.classList.add('hidden');
+        if (dom.qrScannerLoadingState) dom.qrScannerLoadingState.classList.remove('hidden');
+        if (dom.qrScannerStatusText) {
+          dom.qrScannerStatusText.textContent = state.qrScanner.facingMode === 'environment'
+            ? 'Iniciando câmera traseira...'
+            : 'Iniciando câmera frontal...';
+        }
+
+        try {
+          let stream;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: { ideal: state.qrScanner.facingMode },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              },
+              audio: false
+            });
+          } catch (constraintErr) {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          }
+
+          if (!dom.modalQrScanner || dom.modalQrScanner.classList.contains('hidden')) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
+
+          state.qrScanner.stream = stream;
+          dom.qrScannerVideo.srcObject = stream;
+          dom.qrScannerVideo.setAttribute('playsinline', 'true');
+          await dom.qrScannerVideo.play();
+
+          const videoTrack = stream.getVideoTracks()[0];
+          if (videoTrack && typeof videoTrack.getCapabilities === 'function' && dom.btnToggleTorch) {
+            const caps = videoTrack.getCapabilities();
+            if (caps && caps.torch) {
+              dom.btnToggleTorch.classList.remove('hidden');
+            }
+          }
+
+          if (dom.qrScannerLoadingState) dom.qrScannerLoadingState.classList.add('hidden');
+          if (dom.qrScannerVideo) dom.qrScannerVideo.classList.remove('hidden');
+          if (dom.qrViewfinderOverlay) dom.qrViewfinderOverlay.classList.remove('hidden');
+          if (dom.qrCameraControls) dom.qrCameraControls.classList.remove('hidden');
+
+          if (!state.qrScanner.detector && 'BarcodeDetector' in window) {
+            try {
+              const formats = typeof window.BarcodeDetector.getSupportedFormats === 'function'
+                ? await window.BarcodeDetector.getSupportedFormats()
+                : ['qr_code'];
+              if (formats.includes('qr_code')) {
+                state.qrScanner.detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+              }
+            } catch (e) {
+              state.qrScanner.detector = null;
+            }
+          }
+
+          state.qrScanner.active = true;
+          state.qrScanner.lastScanTs = 0;
+          iniciarLoopDeteccaoQr();
+        } catch (err) {
+          let msgTitulo = 'Não foi possível acessar a câmera';
+          let msgDesc = 'Permita o acesso à câmera ou utilize "Fotografar / Enviar Foto" abaixo.';
+          if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+            msgTitulo = 'Permissão de câmera recusada';
+            msgDesc = 'Autorize a câmera nas configurações do navegador ou fotografe a fatura pelo botão abaixo.';
+          } else if (err && (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError')) {
+            msgTitulo = 'Nenhuma câmera encontrada';
+            msgDesc = 'Envie uma foto da carta de cobrança ou cole o código da fatura abaixo.';
+          }
+          mostrarErroScannerQr(msgTitulo, msgDesc);
+        }
+      };
+
+      window.alternarCameraQr = function() {
+        state.qrScanner.facingMode = state.qrScanner.facingMode === 'environment' ? 'user' : 'environment';
+        iniciarCameraQr();
+      };
+
+      window.alternarLanternaQr = async function() {
+        if (!state.qrScanner.stream) return;
+        const track = state.qrScanner.stream.getVideoTracks()[0];
+        if (!track || typeof track.applyConstraints !== 'function') return;
+
+        const nextTorch = !state.qrScanner.torchOn;
+        try {
+          await track.applyConstraints({ advanced: [{ torch: nextTorch }] });
+          state.qrScanner.torchOn = nextTorch;
+          if (dom.btnToggleTorch) {
+            if (nextTorch) {
+              dom.btnToggleTorch.classList.remove('bg-slate-900/75', 'text-white');
+              dom.btnToggleTorch.classList.add('bg-amber-400', 'text-slate-950');
+            } else {
+              dom.btnToggleTorch.classList.add('bg-slate-900/75', 'text-white');
+              dom.btnToggleTorch.classList.remove('bg-amber-400', 'text-slate-950');
+            }
+          }
+        } catch (e) {
+          showToast('Lanterna não suportada por este dispositivo.', 'info');
+        }
+      };
+
+      function iniciarLoopDeteccaoQr() {
+        const video = dom.qrScannerVideo;
+        const canvas = dom.qrScannerCanvas;
+        const ctx = canvas ? canvas.getContext('2d', { willReadFrequently: true }) : null;
+
+        const tick = async (timestamp) => {
+          if (!state.qrScanner.active) return;
+
+          if (video && video.readyState >= 2 && video.videoWidth > 0 && timestamp - state.qrScanner.lastScanTs > 130) {
+            state.qrScanner.lastScanTs = timestamp;
+
+            if (state.qrScanner.detector) {
+              try {
+                const barcodes = await state.qrScanner.detector.detect(video);
+                if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                  processarFaturaEscaneada(barcodes[0].rawValue);
+                  return;
+                }
+              } catch (e) {}
+            }
+
+            if (typeof window.jsQR === 'function' && ctx) {
+              const targetW = Math.min(video.videoWidth, 720);
+              const scale = targetW / video.videoWidth;
+              const targetH = Math.round(video.videoHeight * scale);
+              canvas.width = targetW;
+              canvas.height = targetH;
+              ctx.drawImage(video, 0, 0, targetW, targetH);
+              const imgData = ctx.getImageData(0, 0, targetW, targetH);
+              const code = window.jsQR(imgData.data, targetW, targetH, { inversionAttempts: 'dontInvert' });
+              if (code && code.data) {
+                processarFaturaEscaneada(code.data);
+                return;
+              }
+            }
+          }
+
+          if (state.qrScanner.active) {
+            state.qrScanner.animId = requestAnimationFrame(tick);
+          }
+        };
+
+        state.qrScanner.animId = requestAnimationFrame(tick);
+      }
+
+      function lerQrDeImagem(file) {
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = async () => {
+          try {
+            if ('BarcodeDetector' in window) {
+              try {
+                const detector = state.qrScanner.detector || new window.BarcodeDetector({ formats: ['qr_code'] });
+                const detected = await detector.detect(img);
+                if (detected && detected.length > 0 && detected[0].rawValue) {
+                  URL.revokeObjectURL(objectUrl);
+                  processarFaturaEscaneada(detected[0].rawValue);
+                  return;
+                }
+              } catch (e) {}
+            }
+
+            if (typeof window.jsQR === 'function' && dom.qrScannerCanvas) {
+              const canvas = dom.qrScannerCanvas;
+              const ctx = canvas.getContext('2d', { willReadFrequently: true });
+              const tamanhos = [1200, 800, 500];
+
+              for (const maxSide of tamanhos) {
+                const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
+                const w = Math.max(1, Math.round(img.width * ratio));
+                const h = Math.max(1, Math.round(img.height * ratio));
+                canvas.width = w;
+                canvas.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const decoded = window.jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+                if (decoded && decoded.data) {
+                  URL.revokeObjectURL(objectUrl);
+                  processarFaturaEscaneada(decoded.data);
+                  return;
+                }
+              }
+            }
+
+            URL.revokeObjectURL(objectUrl);
+            showToast('QR Code não identificado na foto. Tente aproximar com boa iluminação ou digite o código.', 'error');
+          } catch (err) {
+            URL.revokeObjectURL(objectUrl);
+            showToast('Erro ao analisar a imagem selecionada.', 'error');
+          }
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          showToast('Não foi possível carregar a imagem selecionada.', 'error');
+        };
+
+        img.src = objectUrl;
+      }
+
+      function lerCamposEmvTlv(payload) {
+        const map = {};
+        let idx = 0;
+        while (idx + 4 <= payload.length) {
+          const tag = payload.substring(idx, idx + 2);
+          const len = parseInt(payload.substring(idx + 2, idx + 4), 10);
+          if (Number.isNaN(len) || len < 0 || idx + 4 + len > payload.length) break;
+          map[tag] = payload.substring(idx + 4, idx + 4 + len);
+          idx += 4 + len;
+        }
+        return map;
+      }
+
+      function normalizarValorNumerico(rawVal) {
+        if (rawVal === null || rawVal === undefined) return 0;
+        if (typeof rawVal === 'number') return Number.isFinite(rawVal) ? rawVal : 0;
+        let str = String(rawVal).replace(/R\$/gi, '').trim();
+        if (str.includes(',') && str.includes('.')) {
+          str = str.replace(/\./g, '').replace(',', '.');
+        } else if (str.includes(',')) {
+          str = str.replace(',', '.');
+        }
+        const num = parseFloat(str.replace(/[^0-9.]/g, ''));
+        return Number.isFinite(num) ? num : 0;
+      }
+
+      function extrairPlacaDeTexto(texto) {
+        if (!texto) return '';
+        const limpo = String(texto).toUpperCase();
+        const matchMercosul = limpo.match(/\b([A-Z]{3}[0-9][A-Z][0-9]{2})\b/);
+        if (matchMercosul && validarPlacaRegex(matchMercosul[1])) return matchMercosul[1];
+        const matchAntigo = limpo.match(/\b([A-Z]{3}[-\s]?[0-9]{4})\b/);
+        if (matchAntigo) {
+          const semTraco = matchAntigo[1].replace(/[^A-Z0-9]/g, '');
+          if (validarPlacaRegex(semTraco)) return semTraco;
+        }
+        return '';
+      }
+
+      function parsearQrCodeFatura(rawInput) {
+        const raw = (rawInput || '').trim();
+        if (!raw) return null;
+
+        const resultado = {
+          origem: 'Fatura Física (Correios)',
+          codigoFatura: '',
+          placa: '',
+          valor: 0,
+          rodovia: '',
+          portico: '',
+          concessionaria: '',
+          vencimento: '',
+          dataPassagem: '',
+          modelo: '',
+          raw
+        };
+
+        // 1. Payload PIX EMVCo (000201...)
+        if (/^000201/.test(raw)) {
+          const tlv = lerCamposEmvTlv(raw);
+          resultado.origem = 'Guia PIX de Fatura Física';
+          resultado.valor = normalizarValorNumerico(tlv['54']);
+          resultado.concessionaria = (tlv['59'] || '').trim() || 'Concessionária Rodoviária';
+          const cidade = (tlv['60'] || '').trim();
+          if (tlv['62']) {
+            const sub62 = lerCamposEmvTlv(tlv['62']);
+            resultado.codigoFatura = (sub62['05'] || '').replace(/\*/g, '').trim();
+          }
+          if (tlv['26']) {
+            const sub26 = lerCamposEmvTlv(tlv['26']);
+            resultado.placa = extrairPlacaDeTexto(sub26['02'] || sub26['01'] || raw);
+          }
+          resultado.rodovia = 'Pedágio Eletrônico Free Flow';
+          resultado.portico = cidade ? `Pórtico Regional • ${cidade}` : 'Cobrança via QR Code PIX';
+          return resultado;
+        }
+
+        // 2. JSON estruturado
+        if (raw.startsWith('{') && raw.endsWith('}')) {
+          try {
+            const obj = JSON.parse(raw);
+            resultado.placa = extrairPlacaDeTexto(obj.placa || obj.plate || '');
+            resultado.valor = normalizarValorNumerico(obj.valor || obj.tarifa || obj.amount || 0);
+            resultado.rodovia = obj.rodovia || obj.highway || '';
+            resultado.portico = obj.portico || obj.trechoKm || obj.trecho || obj.km || '';
+            resultado.concessionaria = obj.concessionaria || obj.operadora || '';
+            resultado.codigoFatura = obj.fatura || obj.codigo || obj.id || '';
+            resultado.vencimento = obj.vencimento || obj.dueDate || '';
+            resultado.modelo = obj.modelo || '';
+            if (resultado.placa || resultado.valor > 0 || resultado.codigoFatura) return resultado;
+          } catch (e) {}
+        }
+
+        // 3. URL de Concessionária / Notificação Free Flow
+        if (/^https?:\/\//i.test(raw) || raw.includes('?') || raw.includes('=')) {
+          try {
+            const urlObj = new URL(/^https?:\/\//i.test(raw) ? raw : `https://fatura.estradapay.com.br/?${raw.replace(/^\?/, '')}`);
+            const p = urlObj.searchParams;
+            const pegar = (...chaves) => {
+              for (const k of chaves) {
+                const v = p.get(k);
+                if (v && v.trim()) return v.trim();
+              }
+              return '';
+            };
+
+            resultado.placa = extrairPlacaDeTexto(pegar('placa', 'plate', 'veiculo') || urlObj.pathname);
+            resultado.valor = normalizarValorNumerico(pegar('valor', 'amount', 'tarifa', 'value', 'total'));
+            resultado.rodovia = pegar('rodovia', 'highway', 'via');
+            resultado.portico = pegar('portico', 'trecho', 'km', 'local', 'praca');
+            resultado.concessionaria = pegar('concessionaria', 'operadora', 'operator');
+            resultado.codigoFatura = pegar('fatura', 'codigo', 'doc', 'boleto', 'id', 'txid');
+            resultado.vencimento = pegar('vencimento', 'due', 'limite');
+            resultado.dataPassagem = pegar('data', 'passagem');
+            resultado.modelo = pegar('modelo');
+
+            if (!resultado.concessionaria && urlObj.hostname && !urlObj.hostname.includes('estradapay.com.br')) {
+              const host = urlObj.hostname.toLowerCase();
+              if (host.includes('ccr') || host.includes('riosp')) resultado.concessionaria = 'CCR RioSP';
+              else if (host.includes('csg')) resultado.concessionaria = 'CSG Caminhos da Serra';
+              else if (host.includes('tamoios')) resultado.concessionaria = 'Concessionária Tamoios';
+              else if (host.includes('econoroeste')) resultado.concessionaria = 'EcoNoroeste';
+              else resultado.concessionaria = urlObj.hostname.replace(/^www\./, '');
+            }
+
+            if (resultado.placa || resultado.valor > 0 || resultado.codigoFatura) {
+              return resultado;
+            }
+          } catch (e) {}
+        }
+
+        // 4. Texto delimitado ou código com placa / valor
+        const placaDetectada = extrairPlacaDeTexto(raw);
+        const matchValor = raw.match(/(?:R\$\s*|valor[=:]\s*)([0-9]+[.,][0-9]{2})/i);
+        const valorDetectado = matchValor ? normalizarValorNumerico(matchValor[1]) : 0;
+
+        if (placaDetectada || valorDetectado > 0) {
+          resultado.placa = placaDetectada;
+          resultado.valor = valorDetectado;
+          const partes = raw.split(/[|;]/).map((s) => s.trim()).filter(Boolean);
+          if (partes.length >= 3) {
+            resultado.codigoFatura = partes[0];
+            resultado.rodovia = partes[2];
+          } else {
+            resultado.codigoFatura = raw.length <= 28 ? raw : `QR-${Date.now().toString().slice(-6)}`;
+          }
+          return resultado;
+        }
+
+        return null;
+      }
+
+      async function processarFaturaEscaneada(raw) {
+        pararCameraQr();
+        fecharModal('modalQrScanner');
+
+        if (navigator.vibrate) {
+          try { navigator.vibrate(80); } catch (e) {}
+        }
+
+        const fatura = parsearQrCodeFatura(raw);
+        if (!fatura) {
+          showToast('QR Code lido, mas não corresponde a uma fatura ou placa Free Flow.', 'error');
+          return;
+        }
+
+        const placaValida = fatura.placa && validarPlacaRegex(fatura.placa) ? fatura.placa : '';
+        const placaExibicao = placaValida || 'FATURA QR';
+        state.placa = placaExibicao;
+
+        if (placaValida && dom.inputHeaderPlaca) {
+          dom.inputHeaderPlaca.value = placaValida;
+          if (dom.btnClearHeaderInput) dom.btnClearHeaderInput.classList.remove('hidden');
+        }
+
+        // Enriquecimento rápido de dados do veículo (sem travar o checkout se falhar)
+        let veiculoEnriquecido = null;
+        if (placaValida) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 2500);
+          try {
+            const resInfo = await fetch(`/api/consultar-placa/${encodeURIComponent(placaValida)}`, {
+              signal: controller.signal
+            });
+            if (resInfo.ok) {
+              const jsonInfo = await resInfo.json();
+              if (jsonInfo && jsonInfo.sucesso && jsonInfo.veiculo && (jsonInfo.veiculo.modelo || jsonInfo.veiculo.marca || jsonInfo.veiculo.marca_modelo)) {
+                veiculoEnriquecido = {
+                  placa: placaValida,
+                  modelo: jsonInfo.veiculo.modelo || jsonInfo.veiculo.marca_modelo || `${jsonInfo.veiculo.marca || ''} ${jsonInfo.veiculo.modelo || ''}`.trim(),
+                  ano: jsonInfo.veiculo.ano_fabricacao ? `${jsonInfo.veiculo.ano_fabricacao} / ${jsonInfo.veiculo.ano_modelo || jsonInfo.veiculo.ano_fabricacao}` : (jsonInfo.veiculo.ano || '2024 / 2025'),
+                  local: jsonInfo.veiculo.municipio ? `${jsonInfo.veiculo.municipio} / ${jsonInfo.veiculo.uf || 'SP'}` : 'São Paulo / SP'
+                };
+              }
+            }
+          } catch (e) {} finally {
+            clearTimeout(timer);
+          }
+        }
+
+        state.veiculo = veiculoEnriquecido || {
+          placa: placaExibicao,
+          modelo: fatura.modelo || (placaValida ? 'VEÍCULO IDENTIFICADO VIA FATURA' : 'FATURA FÍSICA ESCANEADA'),
+          ano: '2024 / 2025',
+          local: 'Brasil (QR Correios)'
+        };
+
+        let debitosFatura = [];
+        if (fatura.valor > 0) {
+          const hoje = new Date();
+          const dataPassagem = new Date(hoje);
+          dataPassagem.setDate(hoje.getDate() - 7);
+          const limite = new Date(hoje);
+          limite.setDate(hoje.getDate() + 18);
+
+          debitosFatura = [{
+            id: `qr_${fatura.codigoFatura || Date.now()}`,
+            rodovia: fatura.rodovia || 'Rodovia Concedida (Free Flow)',
+            trechoKm: fatura.portico || 'Pórtico de Livre Passagem',
+            concessionaria: fatura.concessionaria || 'Concessionária Credenciada',
+            valorTarifa: fatura.valor,
+            dataHoraFormatada: fatura.dataPassagem || `${dataPassagem.toLocaleDateString('pt-BR')} às 14:22`,
+            dataLimiteFormatada: fatura.vencimento || limite.toLocaleDateString('pt-BR'),
+            diasRestantes: 18
+          }];
+        } else if (placaValida) {
+          const fallback = gerarDadosFallback(placaValida, state.veiculo);
+          debitosFatura = fallback.debitos;
+        }
+
+        if (debitosFatura.length === 0) {
+          showToast('Não foi possível extrair o valor da fatura. Informe a placa manualmente.', 'error');
+          return;
+        }
+
+        state.debitos = debitosFatura;
+        state.debitosSelecionados = new Set(debitosFatura.map((d) => d.id));
+
+        const resumoValor = fatura.valor > 0
+          ? `Tarifa de R$ ${fatura.valor.toFixed(2).replace('.', ',')} (${fatura.concessionaria || fatura.rodovia || 'Free Flow'}) carregada no checkout.`
+          : `Passagens vinculadas à placa ${placaExibicao} carregadas automaticamente.`;
+
+        state.faturaEscaneada = {
+          codigoFatura: fatura.codigoFatura || `QR-${Date.now().toString().slice(-6)}`,
+          resumo: resumoValor
+        };
+
+        exibirResultadoModal();
+        showToast('QR Code da fatura lido! Checkout preenchido automaticamente.', 'success');
+      }
 
       function showToast(msg, tipo = 'info') {
         dom.toastText.textContent = msg;
